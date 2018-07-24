@@ -1,5 +1,4 @@
-
-4）使用rvm安装ruby环境,rvm全称Ruby Version Manager
+使用rvm安装ruby环境,rvm全称Ruby Version Manager
 ]# gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3  这一步必须执行成功
 gpg: directory `/root/.gnupg' created
 gpg: new configuration file `/root/.gnupg/gpg.conf' created
@@ -56,7 +55,7 @@ ruby-head
 Using /usr/local/rvm/gems/ruby-2.4.1
 ]# ruby --version
 ruby 2.4.1p111 (2017-03-22 revision 58053) [x86_64-linux]
-~]# gem --version
+]# gem --version
 2.6.14
 ]# gem sources --remove https://rubygems.org/
 https://rubygems.org/ removed from sources
@@ -67,23 +66,23 @@ https://gems.ruby-china.org/ added to sources
 https://gems.ruby-china.org/
 说明：这是ruby-china的地址，可做参考https://ruby-china.org/wiki/install_ruby_guide
 
-5）gem安装bundler和rails
-~]# gem install bundler
-~]# gem install rails
-~]# gem install capistrano -n/usr/local/bin         capistrano可以简单理解为可以把本地的ruby脚步内容部署到远程目标服务器，有点类似ansible
-~]# gem install bundle                              bundle用来管理项目中所有gem依赖
+gem安装bundler和rails
+]# gem install bundler
+]# gem install rails
+]# gem install capistrano -n/usr/local/bin         capistrano可以简单理解为可以把本地的ruby脚步内容部署到远程目标服务器，有点类似ansible
+]# gem install bundle                              bundle用来管理项目中所有gem依赖
 Gem是一个管理Ruby库和程序的标准包,安装gem之前需要先安装ruby（感觉类似yum包）
 所有的gem包，会被安装到/[Ruby root]/lib/ruby/gems/[ver]/目录下，这其中包括了Cache、doc、gems、specifications4个目录，cache下放置下载的原生gem包,
 gems下则放置的是解压过的gem包。
-
 说明：
-   如果提示要安装bundle install，要切换到对应的项目目录里面执行，否则会报各种错误，原因参照下面bundle的解释
+如果提示要安装bundle install，要切换到对应的项目目录里面执行，否则会报各种错误，原因参照下面bundle的解释
+
 
 Ruby环境介绍：
 RVM
 用于帮你安装Ruby环境，帮你管理多个Ruby环境，帮你管理你开发的每个Ruby应用使用机器上哪个Ruby环境。Ruby环境不仅仅是Ruby本身，还包括依赖的第三方Ruby插件。都由RVM管理。
 Rails
-这个也不用多说，著名开发框架。详细看 http://zh.wikipedia.org/wiki/Ruby_on_Rails
+著名开发框架。详细看 http://zh.wikipedia.org/wiki/Ruby_on_Rails
 RubyGems
 RubyGems是一个方便而强大的Ruby程序包管理器（ package manager），类似RedHat的RPM.它将一个Ruby应用程序打包到一个gem里，作为一个安装单元。
 无需安装，最新的Ruby版本已经包含RubyGems了。
@@ -98,7 +97,7 @@ Rakefile
 Rakefile是由Ruby编写，Rake的命令执行就是由Rakefile文件定义。
 Bundle
 相当于多个RubyGems批处理运行。在配置文件gemfilel里说明你的应用依赖哪些第三方包，他自动帮你下载安装多个包，并且会下载这些包依赖的包。
-也就是说要进入到项目目录，bundle才能找到gemfilel，才能明白当前项目依赖哪些包
+也就是说要进入到项目目录，bundle才能找到gemfile，才能明白当前项目依赖哪些包
 
 
 gem命令解释：
@@ -128,13 +127,13 @@ capistrano介绍：
 Capistrano是一种在多台服务器上运行脚本的开源工具，它主要用于部署web应用。它自动完成多台服务器上新版本的同步更新，包括数据库的改变
 capfile是Capistrano需要的主要文件，就像make自动产生makefile，rake自动产生Rakefile一样，Capistrano默认寻找并加载capfile文件，根据cpfile文件再加载“config/deploy.rb"；
 config/deploy.rb文件包含应用程序部署所需的全局设置，同时该文件定义了模块、namespace、task等，在部署过程中只需要按主机组执行相应的task即可完成相应的操作。
-		$ sudo cap install
-		mkdir -p config/deploy
-		create config/deploy.rb
-		create config/deploy/staging.rb
-		create config/deploy/production.rb
-		mkdir -p lib/capistrano/tasks
-		Capified
+		]# sudo cap install 执行该命令会自动初始化如下动作
+		   mkdir -p config/deploy
+		   create config/deploy.rb
+		   create config/deploy/staging.rb
+		   create config/deploy/production.rb
+		   mkdir -p lib/capistrano/tasks
+		   Capified
 		$ tree
 		.
 		├── Capfile
