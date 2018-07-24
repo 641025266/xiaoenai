@@ -1,0 +1,97 @@
+1）logrotate介绍
+   logrotate是个十分有用的工具，它可以自动对日志进行截断（或轮循）、压缩以及删除旧的日志文件。
+   例如，你可以设置logrotate，让/var/log/foo日志文件每30天轮循，并删除超过6个月的日志。
+   配置完后，logrotate的运作完全自动化，不必进行任何进一步的人为干预
+2）logrotate的使用
+touch /var/log/log-file
+vim /etc/logrotate.d/log-file
+/var/log/log-file {
+    monthly
+    rotate 5
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root root
+    postrotate
+        /usr/bin/killall -HUP rsyslogd
+    endscript
+}
+monthly: 日志文件将按月轮循。其它可用值为‘daily’，‘weekly’或者‘yearly’。
+rotate 5: 一次将存储5个归档日志。对于第六个归档，时间最久的归档将被删除。
+compress: 在轮循任务完成后，已轮循的归档将使用gzip进行压缩。
+delaycompress: 总是与compress选项一起用，delaycompress选项指示logrotate不要将最近的归档压缩，压缩将在下一次轮循周期进行。这在你或任何软件仍然需要读取最新归档时很有用。
+missingok: 在日志轮循期间，任何错误将被忽略，例如“文件无法找到”之类的错误。
+notifempty: 如果日志文件为空，轮循不会进行。
+create 644 root root: 以指定的权限创建全新的日志文件，同时logrotate也会重命名原始日志文件。
+postrotate/endscript: 在所有其它指令完成后，postrotate和endscript里面指定的命令将被执行。在这种情况下，rsyslogd 进程将立即再次读取其配置并继续运行
+
+补充命令
+size=50M 表示日志到50M时进行轮循
+dateext 表示在日志后面加上日期
+3）logrotate命令使用
+   要调用为/etc/lograte.d/下配置的所有日志，执行命令logrotate /etc/logrotate.conf 
+   要为某个特定的配置调用logrotate，执行命令logrotate /etc/logrotate.d/log-file 
+4）logrotate命令选项说明
+   logrotate -d  /etc/logrotate.d/log-file 表示测试，不进行实际的轮循
+   logrotate -vf  /etc/logrotate.d/log-file 表示强制进行轮循
+5) 对/data/www/下的日志进行日志切割
+#!/bin/bash
+for i in $(ls -l  /data/www/|awk '{print $NF}');do
+      touch /etc/logrotate.d/$i
+      echo "/data/www/$i/current/log/$i.log   {" >/etc/logrotate.d/$i
+      echo "daily" >>/etc/logrotate.d/$i
+      echo "dateext" >>/etc/logrotate.d/$i
+      echo "rotate 3" >>/etc/logrotate.d/$i
+      echo "compress" >>/etc/logrotate.d/$i
+      echo "delaycompress" >>/etc/logrotate.d/$i
+      echo "missingok" >>/etc/logrotate.d/$i
+      echo "notifempty" >>/etc/logrotate.d/$i
+      echo "create 644 root root" >>/etc/logrotate.d/$i
+      echo "postrotate" >>/etc/logrotate.d/$i
+      echo -e "\t /usr/bin/killall -HUP   /data/www/$i/current/bin/$i" >>/etc/logrotate.d/$i
+      echo "endscript" >>/etc/logrotate.d/$i
+      echo "}" >>/etc/logrotate.d/$i
+done
+6) 对/data/www/下的日志进行日志切割，目前线上用的就是这个
+]# vi /etc/logrotate.d/log_out
+/data/www/*/shared/log/*.log {
+    su cds cds  表示切换成cds用户和cds组，没有这条命令会报错
+    daily
+    dateext
+    rotate 3
+    missingok
+    notifempty
+    compress
+    delaycompress 
+    create 644 cds cds 这个配置可以不需要
+    copytruncate   用于还在打开中的日志文件，把当前日志文件备份并截断；先复制一份当前日志文件用做处理，再清空源日志文件，让其继续接收日志
+}
+]# logrotate -vf /etc/logrotate.d/log_cut  注意查看过程，不能出现错误
+]$ ll -h
+total 18M
+-rw-rw-r-- 1 cds cds    6 Jan 24 10:09 app.pid
+-rw-r--r-- 1 cds cds 1.6M Jan 25 16:03 xauth.log
+-rw-r--r-- 1 cds cds  16M Jan 25 16:03 xauth.log-20180125
+-rw-rw-r-- 1 cds cds    6 Jan 24 10:09 xauth.pid
+补充说明：
+     1)copytruncate和/usr/bin/killall -HUP comdline都可以用于成功的切割日志，但是前者切割日志后新日志的inode和之前一样，不会发生变化。
+     而后者因为是重启服务，所以新日志的inode会发生变化，实际使用中要根据具体情况灵活使用,两者只能选择其中一个使用，不能同时使用
+     2)logrotate默认是在凌晨3~4点开始切割日志，如果想自定义日志切割时间，把/etc/cron.daily/logrotate备份为/etc/cron.daily/logrotate.bak，然后重启crond服务，
+       然后自定义一个定时任务即可实现自定义日志切割时间
+sharedsctipts：
+    通常prerotate和postrotate脚本为每一个轮转的日志运行，也就是说一个单独的脚本可能因为日志轮转定义中匹配了多个文件时(例如/var/log/news/*)，该脚本会运行多次。
+    指定此项，脚本只对所有匹配的日志文件统一执行一次。
+    如果匹配的日志都不需要轮转，脚本也不会执行。
+    如果脚本错误退出，剩下的动作也不会为任何日志执行。
+    隐含create项，可被nosharedscripts覆盖。
+nosharedscripts：
+    默认项
+    为每一个轮转的日志执行prerotate和postrotate
+    如果脚本错误退出，剩下的动作只不对影响到的日志执行。
+
+补充说明：
+   logrotate对日志的切割默认是在凌晨3-4点之间，因为logrotate需要的cron任务在安装logrotate时就自动创建了，详细参考/etc/cron.daily/logrotate,
+   如果想实现在自定义的时间对日志进行切割，需要mv /etc/cron.daily/logrotate{,.bak}，重启crond服务，最后添加crontab定时任务即可
+七牛logkit的启动方式:
+nohup ./logkit -f logkit.conf  &>/data/logkit/log/logkit.log  &

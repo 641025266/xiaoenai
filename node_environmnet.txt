@@ -1,0 +1,224 @@
+同时安装node和npm,到https://nodejs.org/下载对应的版本
+mkdir /data/software
+cd   /data/software
+wget https://nodejs.org/dist/v8.9.3/node-v8.9.3-linux-x64.tar.xz
+xz -d node-v8.9.3-linux-x64.tar.xz
+tar -xvf node-v8.9.3-linux-x64.tar
+mv node-v8.9.3-linux-x64  /usr/local
+cd /usr/local
+ln -s node-v8.9.3-linux-x64  node
+vi /etc/profile.d/node.sh 
+   export PATH=/usr/local/node/bin/:$PATH
+source /etc/profile.d/node.sh  测试node和npm命令是否生成
+]# npm config set registry https://registry.npm.taobao.org  把npm全局源设置为淘宝源
+]# npm config get  registry  确认源是否生成
+https://registry.npm.taobao.org/
+]# npm info underscore 这个命令也可以确认源，但是信息很多
+
+
+node.js介绍：
+简单的说 Node.js 就是运行在服务端的 JavaScript。Node.js是一个基于Chrome JavaScript 运行时建立的一个平台。
+Node.js是一个事件驱动I/O服务端JavaScript环境，基于Google的V8引擎，V8引擎执行Javascript的速度非常快，性能非常好
+node生态介绍：
+    node包管理器有npm，cnpm，yarn
+    node进程管理器有pm2
+可以利用npm来安装cnpm和pm2，yarn命令需要单独使用yum安装，下面分别介绍
+
+1)npm的介绍
+NPM（node package manager），通常称为node包管理器。它的主要功能就是管理node包，包括：安装、卸载、更新、查看、搜索、发布等。
+node包的安装分两种：本地安装、全局安装。两者的区别如下，后面会通过简单例子说明
+本地安装：package会被下载到当前所在目录，也只能在当前目录下使用。
+全局安装：package会被下载到到特定的系统目录下，安装的package能够在所有目录下使用
+
+]# npm install -g pm2  建议使用-g表示全局安装
+/root/node-v8.9.3-linux-x64/bin/pm2 -> /root/node-v8.9.3-linux-x64/lib/node_modules/pm2/bin/pm2  前面是链接路径，后面是真实路径
+/root/node-v8.9.3-linux-x64/bin/pm2-docker -> /root/node-v8.9.3-linux-x64/lib/node_modules/pm2/bin/pm2-docker
+/root/node-v8.9.3-linux-x64/bin/pm2-dev -> /root/node-v8.9.3-linux-x64/lib/node_modules/pm2/bin/pm2-dev
+/root/node-v8.9.3-linux-x64/bin/pm2-runtime -> /root/node-v8.9.3-linux-x64/lib/node_modules/pm2/bin/pm2-runtime
+
+npm安装命令
+安装最新版本的grunt-cli    npm install -g  grunt-cli
+安装0.1.9版本的grunt-cli   npm install grunt-cli@"0.1.9" 如果我们的项目依赖了很多package，将项目依赖的包都在package.json文件里面，然后切换到该目录，执行npm install
+其他package安装命令        npm install --help
+卸载grunt-cli              npm uninstall grunt-cli
+卸载0.1.9版本的grunt-cli   npm uninstall grunt-cli@"0.1.9"
+查看安装了哪些包           npm ls              要切换到对应的node项目目录里面才可以查看
+查看grunt-cli的信息        npm ls grunt-cli    要切换到对应的node项目目录里面才可以查看
+查看更详细信息             npm info grunt-cli  该命令可以查看grunt-cli的详细信息
+package更新                npm update grunt-cli
+搜索                       npm search grunt-cli
+
+npm的配置工作主要是通过npm config命令，主要包含增、删、改、查几个步骤，下面就以最为常用的proxy配置为例。
+设置proxy
+内网使用npm很头痛的一个问题就是代理，假设我们的代理是 http://proxy.example.com:8080
+npm config set proxy http://proxy.example.com:8080
+设置完，我们查看下当前代理设置
+npm config get proxy
+http://proxy.example.com:8080/
+删除proxy
+npm config delete proxy
+查看所有配置
+npm config list
+直接修改配置文件
+npm config edit
+
+在package.json里，你经常会在包名后看到类似"~0.1.0"这样的字符串，这就是包的版本啦。下面会列举最常见的版本声明形式，以及版本书写的要求：
+常见版本声明形式
+a、"~1.2.3" 是神马意思呢，看下面领悟
+"~1.2.3" = ">=1.2.3 <1.3.0"
+"~1.2" = ">=1.2.0 <1.3.0"
+"~1" = ">=1.0.0 <1.1.0"
+b、"1.x.x"是什么意思呢，继续自行领悟
+"1.2.x" = ">=1.2.0 <1.3.0"
+"1.x.x" = ">=1.0.0 <2.0.0"
+"1.2" = "1.2.x"
+"1.x" = "1.x.x"
+"1" = "1.x.x"
+
+2)cnpm和npm都是node的包管理器，但是cnpm使用的是国内镜像源，同npm没有本质上的区别              
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+安装完后最好查看其版本号cnpm -v或关闭命令提示符重新打开，安装完直接使用有可能会出现错误 
+
+3)yarn和npm都是node包管理工具，yarn设计出来是替代npm的
+wget https://dl.yarnpkg.com/rpm/yarn.repo -O /etc/yum.repos.d/yarn.repo
+yum install -y yarn
+yarn config set registry https://registry.npm.taobao.org  把yarn仓库设置成为淘宝源
+]# yarn config get registry  确认仓库是淘宝源
+https://registry.npm.taobao.org
+yarn是node的项目构建工具，所以先要有node,执行yarn init后会产生package.json文件，package.json文件包含了该应用依赖的包
+
+yarn命令：
+yarn和 yarn install ，这两个命令的效果是一样的，等同于npm install，使用这个命令会在该目录生成一个yarn.lock的文件。
+yarn add koa，安装koa模块并更新package.json和yarn.lock文件，等同于npm install koa --save。
+也可以使用yarn global add koa，等同于npm install koa -g，将模块直接安装到全局环境变量里，方便使用。
+yarn list，根据当前项目的package.json查看模块的依赖及版本。
+yarn info koa，查看koa模块的详细信息，类似于npm view koa。
+yarn init，初始化项目package.json文件，等同于npm init。
+yarn run，运行package.json中的script
+
+4)pm2命令安装
+npm install -g pm2 安装是全局安装，但实际运行node项目时会是其他用户，比如cds
+pm2介绍
+PM2是node进程管理工具，可以利用它来简化很多node应用管理的繁琐任务，如性能监控、自动重启、负载均衡等，而且使用非常简单。
+目录介绍，pm2安装好后，会自动创建下面目录
+[cds@u03mix03 ~]$ pm2 list  确认是cds用户在运行node项目
+┌────────────┬────┬──────┬───────┬────────┬─────────┬────────┬─────┬───────────┬──────┬──────────┐
+│ App name   │ id │ mode │ pid   │ status │ restart │ uptime │ cpu │ mem       │ user │ watching │
+├────────────┼────┼──────┼───────┼────────┼─────────┼────────┼─────┼───────────┼──────┼──────────┤
+│ clockinWeb │ 0  │ fork │ 23873 │ online │ 0       │ 46h    │ 0%  │ 71.5 MB   │ cds  │ disabled │
+└────────────┴────┴──────┴───────┴────────┴─────────┴────────┴─────┴───────────┴──────┴──────────┘
+ Use `pm2 show <id|name>` to get more details about an app
+[cds@u03mix03 ~]$ ls -al .pm2/  则会在cds用户的家目录会有一个.pm2目录
+total 112
+drwxrwxr-x 5 cds cds  4096 Jul  2 09:15 .
+drwx------ 8 cds cds  4096 Jun 20 19:00 ..
+drwxrwxr-x 2 cds cds  4096 Jun 20 18:56 logs
+-rw-rw-r-- 1 cds cds     2 Jun 20 18:56 module_conf.json
+drwxrwxr-x 2 cds cds  4096 Jun 20 18:56 modules
+drwxrwxr-x 2 cds cds  4096 Jul  7 11:57 pids
+-rw-rw-r-- 1 cds cds 75826 Jul  7 11:57 pm2.log
+-rw-rw-r-- 1 cds cds     5 Jul  2 09:15 pm2.pid
+srwxrwxr-x 1 cds cds     0 Jul  2 09:15 pub.sock
+srwxrwxr-x 1 cds cds     0 Jul  2 09:15 rpc.sock
+-rw-rw-r-- 1 cds cds    13 Jun 20 18:56 touch
+
+
+
+pm2命令的参数说明：
+ --watch：监听应用目录的变化，一旦发生变化，自动重启。如果要精确监听、不间断的监听目录，最好通过配置文件。
+ -i --instances：启用多少个实例，可用于负载均衡。如果-i 0或者-i max，则根据当前机器核数确定实例数目。
+ --ignore-watch：排除监听的目录/文件，可以是特定的文件名，也可以是正则。比如--ignore-watch="test node_modules "some scripts""
+ -n --name：应用的名称。查看应用信息的时候可以用到。
+ -o --output <path>：标准输出日志文件的路径。
+ -e --error <path>：错误输出日志文件的路径。
+ --interpreter <interpreter>：the interpreter pm2 should use for executing app (bash, python...)。比如你用的coffee script来编写应用。
+pm2常用命令
+    pm2 start process.json  --watch -i 2
+    pm2 restart process.json
+    pm2 list  当前用户只能查看当前用户的node进程
+    pm2 stop app_name|app_id 停止指定的应用
+    pm2 stop all             停止所有的应用
+    pm2 describe  id         查看指定id的应用信息
+
+更新pm2
+]# pm2 save # 记得保存进程状态
+]# npm install pm2 -g
+]# pm2 update
+
+配置文件说明：
+配置文件里的设置项，跟命令行参数基本是一一对应的。yaml或者json文件都可以
+json格式的配置文件，pm2当作普通的js文件来处理，所以可以在里面添加注释或者编写代码，这对于动态调整配置很有好处。
+如果启动的时候指定了配置文件，那么命令行参数会被忽略，个别参数除外，比如--env
+
+下面以clockinWeb的配置文件进行说明
+[cds@u03mix03 current]$ pwd
+/data/www/clockinWeb/current
+[cds@u03mix03 current]$ cat process.json
+{
+  "apps": [
+    {
+      "name": "clockinWeb",
+      "cwd": "/data/www/clockinWeb/current",                //表示工作目录
+      "script": "/data/www/clockinWeb/current/server.js",  //实际启动脚本
+      "exec_interpreter": "/usr/local/node/bin/node", //应用程序的脚本解释器，类似shell
+      "exec_mode": "fork",  //应用启动模式，支持fork和cluster模式
+      "max_memory_restart": "1024M",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "out_file": "/data/www/clockinWeb/shared/log/clockinWeb.log",
+      "error_file": "/data/www/clockinWeb/shared/log/clockinWeb.log",
+      "env": {
+        "NODE_ENV": "production"  // 环境参数，当前指定为生产环境
+      }
+    }
+  ]
+
+ruby的gem，Python的PyPL、setuptools，PHP的pear都是包管理工具
+
+使用docker安装npm私钥镜像仓库
+由于之前搭建Nexus的时候安装了Docker的环境，刚好verdaccio支持Docker，所以直接使用Docker来安装了,实际上就像自己创建了一个yum仓库
+基本参照https://blog.devzeng.com/blog/npm-repo-with-verdaccio.html
+1、创建配置文件
+mkdir -p /data/verdaccio
+git clone https://github.com/verdaccio/docker-examples
+cp  docker-examples/docker-local-storage-volume/storage  /data/verdaccio/
+mkdir /data/verdaccio/conf/private-npm/
+cp docker-examples/docker-local-storage-volume/conf/*  /data/verdaccio/conf/private-npm/
+cd /data/verdaccio/conf/private-npm/
+git push origin master
+2、修改配置文件
+（1）修改conf/config.yaml
+# 使用淘宝的cnpmjs镜像，加速
+uplinks:
+  npmjs:
+    url: https://registry.npm.taobao.org/
+（2）修改conf/htpasswd
+到http://tool.oschina.net/htpasswd生成需要的账号密码
+（3）删除storage下面的文件
+3、创建并运行容器
+docker run --name verdaccio -d -v /home/docker/verdaccio:/verdaccio -p 4873:4873 verdaccio/verdaccio:latest
+通过docker logs verdaccio查看日志发现存在权限问题，是由于使用了挂载的数据卷和容器内部的权限不一致的问题，需要修改下权限
+（1）进入容器
+docker exec -it verdaccio sh
+（2）查看用户ID
+whoami & id
+（3）修改文件夹权限
+sudo chown -R 100 verdaccio  这里根据实际获得的id进行操作
+启动容器之后访问http://106.75.24.200:4873出现访问界面表示安装成功
+
+本地客户端：
+]# npm adduser --registry  http://106.75.24.200:4873
+Username: chenhao
+Password:
+Email: (this IS public) hao.chen@enai.im
+Logged in as chenhao on http://106.75.24.200:4873/
+先注册好账号和密码，然后就可以通过http://106.75.24.200:4873访问了
+
+
+本地mac实现wucaiWeb docker化的操作
+➜  ~cd $HOME
+➜  ~git clone git@gitlab.xiaoenai.net:h5/wucaiWeb.git
+➜  ~docker run -it -v  $HOME/wucaiWeb:/data/www/wucaiWeb/current -p 9600:9600  106.75.24.200:5000/centos:centos7-node
+[root@ec6ff3ba30fe /]# cd /data/www/wucaiWeb/current/
+[root@ec6ff3ba30fe current]# cnpm install
+[root@ec6ff3ba30fe current]# npm run build:test
+[root@ec6ff3ba30fe current]# pm2 start process.debug.json --no-daemon

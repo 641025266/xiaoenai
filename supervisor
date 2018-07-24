@@ -1,0 +1,143 @@
+supervisor官网http://www.supervisord.org/
+1）安装setuptools
+]# yum -y install epel-release
+]# yum -y install python-setuptools
+]# wget http://source.goyun.org:8000/source/meld3/meld3-0.6.10.tar.gz  可到对应的网址下载不同的版本
+]# tar zxf meld3-0.6.10.tar.gz 
+]# cd meld3-0.6.10
+]# python2.6  setup.py install  ;python版本最好在2.4以上
+2）源码安装supervisor
+]# wget http://source.goyun.org:8000/source/supervisor/supervisor-3.3.2.tar.gz   可到对应的网址下载不同的版本
+]# tar zxf supervisor-3.3.2.tar.gz
+]# cd supervisor-3.3.2
+]# python2.6  setup.py install
+]# echo_supervisord_conf > /etc/supervisord.conf
+]# vi /etc/supervisord.conf
+[unix_http_server]
+file=/tmp/supervisor.sock   ; the path to the socket file  此处的文件必须和supervisorctl中的serverurl保持一样
+;chmod=0700                 ; socket file mode (default 0700)
+;chown=nobody:nogroup       ; socket file uid:gid owner
+;username=user              ; default is no username (open server)
+;password=123               ; default is no password (open server)
+
+[inet_http_server]          ; Web Server和远程的supervisorctl，默认是关闭的，现在开启
+port=0.0.0.0:9001           ; ip_address:port specifier, *:port for all iface  
+;username=user              ; default is no username (open server)
+;password=123               ; default is no password (open server)
+
+[supervisord]
+logfile=/tmp/supervisord.log ; main log file; default $CWD/supervisord.log
+logfile_maxbytes=50MB        ; max main logfile bytes b4 rotation; default 50MB
+logfile_backups=10           ; # of main logfile backups; 0 means none, default 10
+loglevel=info                ; log level; default info; others: debug,warn,trace
+pidfile=/tmp/supervisord.pid ; supervisord pidfile; default supervisord.pid
+nodaemon=false               ; start in foreground if true; default false
+minfds=1024                  ; min. avail startup file descriptors; default 1024
+minprocs=200                 ; min. avail process descriptors;default 200
+;umask=022                   ; process file creation umask; default 022
+;user=chrism                 ; default is current user, required if root
+;identifier=supervisor       ; supervisord identifier, default is 'supervisor'
+;directory=/tmp              ; default is not to cd during start
+;nocleanup=true              ; don't clean up tempfiles at start; default false
+;childlogdir=/tmp            ; 'AUTO' child log dir, default $TEMP
+;environment=KEY="value"     ; key value pairs to add to environment
+;strip_ansi=false            ; strip ansi escape codes in logs; def. false
+[rpcinterface:supervisor]    ；这个选项是给XML_RPC用的，如果要使用supervisord或者web server 必须要开启
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+[supervisorctl]
+serverurl=unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
+;serverurl=http://127.0.0.1:9001 ; use an http:// url to specify an inet socket
+;username=chris              ; should be same as in [*_http_server] if set
+;password=123                ; should be same as in [*_http_server] if set
+;prompt=mysupervisor         ; cmd line prompt (default "supervisor")
+;history_file=~/.sc_history  ; use readline history if available
+[include]
+files = /etc/supervisor/*.ini ; 针对每一个管理的服务配置文件都放置在此处
+
+]# supervisord -c /etc/supervisord.conf
+]# netstat -tunl 确认9001端口处于监听状态
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address               Foreign Address             State
+tcp        0      0 0.0.0.0:9001                0.0.0.0:*                   LISTEN
+]# supervisord -v
+3.3.2
+宿主机ip地址是172.16.2.151，此时在宿主机的浏览器上输入172.16.2.151:9001可以查看supervisor的web管理界面,说明配置成功
+
+3）以supversior管理redis服务为例进行测试验证
+Supervisor只能管理非daemon的进程，也就是不能管理守护进程,进程只能以前台的方式运行，否则提示Exited too quickly (process log may have details)异常。
+]# yum install -y redis 
+]# mkdir /etc/supervisor
+]# vi /etc/supervisor/redis.ini
+[program:redis]
+command=/usr/bin/redis-server /etc/redis.conf  ; 程序启动命令
+autostart=true       ; 在supervisord启动的时候也自动启动
+startsecs=10         ; 启动10秒后没有异常退出，就表示进程正常启动了，默认为1秒
+autorestart=true     ; 程序退出后自动重启,可选值：[unexpected,true,false]，默认为unexpected，表示进程意外杀死后才重启
+startretries=3       ; 启动失败自动重试次数，默认是3
+user=redis           ; 用哪个用户启动进程，默认是root
+redirect_stderr=true ; 把stderr重定向到stdout，默认false
+stdout_logfile_maxbytes=20MB  ; stdout日志文件大小，默认50MB,把这里设置为0MB，就可以对日志大小没有限制了
+stdout_logfile_backups = 20   ; stdout日志文件备份数，默认是10
+stdout_logfile=/var/log/redis/redis.log   ; 该日志目录最好同redis自身的redis.conf中的日志目录保持一致
+stopsignal=INT
+stopwaitsecs=10
+stopasgroup=true     ;默认为false,进程被杀死时，是否向这个进程组发送stop信号，包括子进程,最好修改为true，否则stop进程后再启动进程有可能报错
+killasgroup=true     ;默认为false，向进程组发送kill信号，包括子进程，,最好修改为true，否则stop进程后再启动进程有可能报错
+]# useradd redis      ;如果用户已经存在则不需要此步骤
+]# mkdir /var/log/redis
+]# chown -R  redis:redis /var/log/redis 
+]# su -l redis -c '/usr/bin/redis-server /etc/redis.conf' ;务必确保此命令可以启动redis服务，而且此时redis要运行在前台，否则后续以supervisor运行时会报错
+]# ps aux             ;确保此时redis-server对应的用户是redis
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       472  0.0  0.6 104748 13564 ?        Ss   06:59   0:01 /usr/bin/python2.6 /usr/bin/supervisord -c /etc/supervisord.conf
+root       789  0.0  0.1  45608  2892 pts/2    S+   07:57   0:00 su -l redis -c /usr/bin/redis-server /etc/redis.conf
+redis      790  0.2  0.1  40100  3980 ?        Ssl  07:57   0:00 /usr/bin/redis-server 127.0.0.1:6379
+]# killall redis-server ;确认测试成功后，kill掉redis进程
+]# supervisorctl reload ;每次修改配置文件后，执行reload命令重新加载配置文件
+]# supervisorctl status ;确认redis处于运行状态
+redis                            STARTING
+]# ps aux               ;再次确认redis-server对应的用户是redis
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       472  0.0  0.6 104752 13564 ?        Ss   06:59   0:01 /usr/bin/python2.6 /usr/bin/supervisord -c /etc/supervisord.conf
+redis      820  0.2  0.1  38600  3580 ?        Sl   08:04   0:00 /usr/bin/redis-server 127.0.0.1:6379
+此时可反复执行killall redis-server或者killall -15 redis-server，然后执行ps aux发现redis-server始终存在，说明配置文件中的autorestart生效了
+但是不能使用killall -HUP  redis-server，实际上除了HUP信号，其他诸如INT|KILL|TERM|USR1|USR2|QUIT都可以接受。这个supervisor监控进程的机制有关系
+因为要把前台进程运行为类似后台进程，就是类似nohup这样，此时是不能接受HUP信号的
+
+注意：
+]# supervisorctl  直接执行supervisorctl命令后进入supervisorctl的交互模式
+redis                            RUNNING   pid 835, uptime 0:01:04
+supervisor> help 显示可以执行的命令，这些命令也可以直接跟在supervisorctl执行
+default commands (type help <topic>):
+=====================================
+add    exit      open  reload  restart   start   tail
+avail  fg        pid   remove  shutdown  status  update
+clear  maintail  quit  reread  signal    stop    version
+问题：
+场景一：新增加一个wakeManger进程，在不影响已有进程情况下启动新进程
+[root@dev02 supervisor]# supervisorctl status
+redis                            RUNNING   pid 1753, uptime 0:01:10
+[root@dev02 supervisor]# ll
+总用量 12
+drwxr-xr-x 2 root root 4096 3月   7 10:23 log
+-rw-r--r-- 1 root root 1223 3月   7 11:51 redis.ini
+-rw-r--r-- 1 root root 1262 3月   7 10:31 wakeManager.ini
+[root@dev02 supervisor]# supervisorctl reread
+wakeManager: available
+[root@dev02 supervisor]# supervisorctl status
+redis                            RUNNING   pid 1753, uptime 0:01:26
+[root@dev02 supervisor]# supervisorctl add wakeManager
+wakeManager: added process group
+[root@dev02 supervisor]# supervisorctl status
+redis                            RUNNING   pid 1753, uptime 0:01:53
+wakeManager                      RUNNING   pid 1857, uptime 0:00:11
+场景二：一个进程已经存在，但是现在被部署了一次，是可以直接重启进程，还是在部署前先停止进程在部署完成后启动进程
+supervisorctl update作用
+如果进程已经存在且在运行，但是进程配置被跟新了，先stop，然后start
+如果进程已经存在但处于停止状态，但是进程配置被跟新了，update只是添加新配置，不启动
+如果进程不存在，添加一个全新的配置文件，则直接start
+场景三：supervisor对日志有备份功能，但是不能实现定时功能，把supervisorctl restart命令加入到logrotate配置文件中
+
+
+
+

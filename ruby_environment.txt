@@ -1,0 +1,225 @@
+
+4）使用rvm安装ruby环境,rvm全称Ruby Version Manager
+]# gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3  这一步必须执行成功
+gpg: directory `/root/.gnupg' created
+gpg: new configuration file `/root/.gnupg/gpg.conf' created
+gpg: WARNING: options in `/root/.gnupg/gpg.conf' are not yet active during this run
+gpg: keyring `/root/.gnupg/secring.gpg' created
+gpg: keyring `/root/.gnupg/pubring.gpg' created
+gpg: requesting key D39DC0E3 from hkp server keys.gnupg.net
+gpg: /root/.gnupg/trustdb.gpg: trustdb created
+gpg: key D39DC0E3: public key "Michal Papis (RVM signing) <mpapis@gmail.com>" imported
+gpg: no ultimately trusted keys found
+gpg: Total number processed: 1
+gpg:               imported: 1  (RSA: 1)
+
+]# curl -sSL https://get.rvm.io | bash -s stable
+Downloading https://github.com/rvm/rvm/archive/1.29.3.tar.gz
+Downloading https://github.com/rvm/rvm/releases/download/1.29.3/1.29.3.tar.gz.asc
+gpg: Signature made Sun Sep 10 20:59:21 2017 UTC using RSA key ID BF04FF17
+gpg: Good signature from "Michal Papis (RVM signing) <mpapis@gmail.com>"
+gpg:                 aka "Michal Papis <michal.papis@toptal.com>"
+gpg:                 aka "[jpeg image of size 5015]"
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: 409B 6B17 96C2 7546 2A17  0311 3804 BB82 D39D C0E3
+     Subkey fingerprint: 62C9 E5F4 DA30 0D94 AC36  166B E206 C29F BF04 FF17
+GPG verified '/usr/local/rvm/archives/rvm-1.29.3.tgz'
+Creating group 'rvm'
+Installing RVM to /usr/local/rvm/
+Installation of RVM in /usr/local/rvm/ is almost complete:
+  * First you need to add all users that will be using rvm to 'rvm' group,
+    and logout - login again, anyone using rvm will be operating with `umask u=rwx,g=rwx,o=rx`.
+  * To start using RVM you need to run `source /etc/profile.d/rvm.sh`
+    in all your open shell windows, in rare cases you need to reopen all shell windows.
+
+]# source /etc/profile.d/rvm.sh 然后检查rvm命令是否已经生成
+注意：如果curl -sSL https://get.rvm.io | bash -s stable命令执行失败，请执行
+curl -L https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer | bash -s stable
+
+]# rvm  list known  列出rvm管理的软件及版本
+# MRI Rubies
+[ruby-]1.8.6[-p420]
+[ruby-]1.8.7[-head] # security released on head
+[ruby-]1.9.1[-p431]
+[ruby-]1.9.2[-p330]
+[ruby-]1.9.3[-p551]
+[ruby-]2.0.0[-p648]
+[ruby-]2.1[.10]
+[ruby-]2.2[.7]
+[ruby-]2.3[.4]
+[ruby-]2.4[.1]
+ruby-head
+...........................................
+]# rvm install ruby-2.4.1    安装最新版的ruby，此命令把ruby和gem命令同时安装好了
+]# rvm use 2.4.1 --default   把2.4.1版设置为默认版本
+Using /usr/local/rvm/gems/ruby-2.4.1
+]# ruby --version
+ruby 2.4.1p111 (2017-03-22 revision 58053) [x86_64-linux]
+~]# gem --version
+2.6.14
+]# gem sources --remove https://rubygems.org/
+https://rubygems.org/ removed from sources
+]# gem sources --add https://gems.ruby-china.org/
+https://gems.ruby-china.org/ added to sources
+]# gem sources --list
+*** CURRENT SOURCES ***
+https://gems.ruby-china.org/
+说明：这是ruby-china的地址，可做参考https://ruby-china.org/wiki/install_ruby_guide
+
+5）gem安装bundler和rails
+~]# gem install bundler
+~]# gem install rails
+~]# gem install capistrano -n/usr/local/bin         capistrano可以简单理解为可以把本地的ruby脚步内容部署到远程目标服务器，有点类似ansible
+~]# gem install bundle                              bundle用来管理项目中所有gem依赖
+Gem是一个管理Ruby库和程序的标准包,安装gem之前需要先安装ruby（感觉类似yum包）
+所有的gem包，会被安装到/[Ruby root]/lib/ruby/gems/[ver]/目录下，这其中包括了Cache、doc、gems、specifications4个目录，cache下放置下载的原生gem包,
+gems下则放置的是解压过的gem包。
+
+说明：
+   如果提示要安装bundle install，要切换到对应的项目目录里面执行，否则会报各种错误，原因参照下面bundle的解释
+
+Ruby环境介绍：
+RVM
+用于帮你安装Ruby环境，帮你管理多个Ruby环境，帮你管理你开发的每个Ruby应用使用机器上哪个Ruby环境。Ruby环境不仅仅是Ruby本身，还包括依赖的第三方Ruby插件。都由RVM管理。
+Rails
+这个也不用多说，著名开发框架。详细看 http://zh.wikipedia.org/wiki/Ruby_on_Rails
+RubyGems
+RubyGems是一个方便而强大的Ruby程序包管理器（ package manager），类似RedHat的RPM.它将一个Ruby应用程序打包到一个gem里，作为一个安装单元。
+无需安装，最新的Ruby版本已经包含RubyGems了。
+Gem
+Gem是封装起来的Ruby应用程序或代码库。注：在终端使用的gem命令，是指通过RubyGems管理Gem包。
+Gemfile
+定义你的应用依赖哪些第三方包，bundle根据该配置去寻找这些包。
+Rake
+Rake是所有需要安装的Gem中最重要的一个，并且它应该始终是你在系统上第一个安装的Gem。Rake是一个构建工具，和Make很相似，但它允许用Ruby来写Rakefile（如何进行构建的定义文件），
+其中使用了一种特定的DSL（domain-specific language，领域专用语言），在保持Ruby强大功能的同时提供很高的可读性。 Rails用rake扩展来完成多种不容任务，如数据库初始化、更新等。
+Rakefile
+Rakefile是由Ruby编写，Rake的命令执行就是由Rakefile文件定义。
+Bundle
+相当于多个RubyGems批处理运行。在配置文件gemfilel里说明你的应用依赖哪些第三方包，他自动帮你下载安装多个包，并且会下载这些包依赖的包。
+也就是说要进入到项目目录，bundle才能找到gemfilel，才能明白当前项目依赖哪些包
+
+
+gem命令解释：
+# 注意：在某些linux发行版中为了系统稳定性此命令禁止执行
+$ gem update --system
+# 从Gem源安装gem包
+$ gem install [gemname]
+# 从本机安装gem包
+$ gem install -l [gemname].gem
+# 安装指定版本的gem包
+$ gem install [gemname] -v version或者--version=[ver]
+# 更新所有已安装的gem包
+$ gem update
+# 更新指定的gem包
+# 注意：gem update [gemname]不会升级旧版本的包，此时你可以使用 gem install [gemname] --version=[ver]代替
+$ gem update [gemname]
+# 删除指定的gem包，注意此命令将删除所有已安装的版本
+$ gem uninstall [gemname]
+# 删除某指定版本gem
+$ gem uninstall [gemname] --version=[ver]
+# 查看本机已安装的所有gem包
+$ gem list [--local]
+如果出现下载慢的问题，更换源即可
+
+capistrano介绍：
+为了安装Capistrano，需要先安装Ruby和gem
+Capistrano是一种在多台服务器上运行脚本的开源工具，它主要用于部署web应用。它自动完成多台服务器上新版本的同步更新，包括数据库的改变
+capfile是Capistrano需要的主要文件，就像make自动产生makefile，rake自动产生Rakefile一样，Capistrano默认寻找并加载capfile文件，根据cpfile文件再加载“config/deploy.rb"；
+config/deploy.rb文件包含应用程序部署所需的全局设置，同时该文件定义了模块、namespace、task等，在部署过程中只需要按主机组执行相应的task即可完成相应的操作。
+		$ sudo cap install
+		mkdir -p config/deploy
+		create config/deploy.rb
+		create config/deploy/staging.rb
+		create config/deploy/production.rb
+		mkdir -p lib/capistrano/tasks
+		Capified
+		$ tree
+		.
+		├── Capfile
+		├── config
+		│   ├── deploy
+		│   │   ├── production.rb
+		│   │   └── staging.rb
+		│   └── deploy.rb
+		└── lib
+		    └── capistrano
+         	         └── tasks
+app,web,db是Capistrano需要的三种角色：
+web：你的服务器软件运行的地方；
+app：你的应用层运行的地方；
+db：迁移运行的地方
+
+cap deploy:update 这个指令将把你的源代码复制到你的服务器上，然后把current这个链接更新到最新的目录下。但是这会儿还没正式启动应用层
+cap deploy:setup 执行该命令时，Capistrano 将SSH 到你的服务器，进入你在deploy_to变量中所指定的目录，并创建特殊的Capistrano目录结构
+cap deploy:check 
+cap production deploy  表示正式部署
+cap production deploy:rollback 表示回滚
+
+deploy.rb部分代码解释：
+require 'bundler/capistrano'                                                  #添加之后部署时会调用bundle install， 如果不需要就可以注释掉
+require "capistrano/ext/multistage"                                           #多stage部署所需
+set :stages, %w(development production)
+set :default_stage, "development"
+set :application, "crm_app_end"                                               #应用名称
+set :repository,  "https://test.361way.com/svn/trunk"                         源代码仓库地址
+set :keep_releases, 5                                                         #只保留5个备份
+set :deploy_to, "/var/www/#{application}"                                     #部署到远程机器的路径
+set :user, "user1"                                                            #登录部署机器的用户名
+set :password, "user1"                                                        #登录部署机器的密码， 如果不设部署时需要输入密码
+default_run_options[:pty] = true                                              #pty: 伪登录设备
+default_run_options[:shell] = “/bin/bash”                                     设置默认的shell
+set :use_sudo, true                                                           #执行的命令中含有sudo， 如果设为false， 用户所有操作都有权限
+set :runner, "user2"                                                          #以user2用户启动服务
+set :scm, :git                                                                #注意git前有冒号，不能少
+role :web, "192.168.0.13", "192.168.0.117"                                    # Your HTTP server, Apache/etc
+role :app, "192.168.0.13", "192.168.0.117"                                    # This may be the same as your `Web` server
+role :db,  "192.168.0.13", :primary => true                                   # This is where Rails migrations will run
+namespace :deploy do
+  desc "remove and destory this app"
+  task :destory, :roles => :app do
+	run "cd #{deploy_to}/../ && #{try_sudo} mv #{application} /tmp/#{application}_#{Time.now.strftime('%Y%d%m%H%M%S')}"      #try_sudo 以sudo权限执行命令
+  end
+  after "deploy:update", "deploy:shared:setup"                                 #after， before 表示在特定操作之后或之前执行其他任务
+  namespace :shared do
+    desc "setup shared folder symblink"
+    task :setup do
+       run "cd #{deploy_to}/current; rm -rf shared; ln -s #{shared_path} ."
+    end
+  end
+  after "deploy:setup", "deploy:setup_chown"
+  desc "change owner from root to user1"
+  task :setup_chown do
+      run "cd #{deploy_to}/../ && #{try_sudo} chown -R #{user}:#{user} #{application}"
+  end
+  task :start do
+       run "cd #{deploy_to}/current && ./crmd.sh start"
+       #try_sudo "cd #{deploy_to}/current && ./restart.sh"
+   end
+   task :stop do
+	run "cd #{deploy_to}/current && ./crmd.sh stop"
+   end
+   task :restart do
+	run "cd #{deploy_to}/current && ./crmd.sh restart"
+    end
+end
+补充说明：
+# using simple syntax
+role :web, %w{hello@world.com example.com:1234}
+# using extended syntax (which is equivalent)
+server 'world.com', roles: [:web], user: 'hello'
+server 'example.com', roles: [:web], port: 1234
+如上两种表达方式都表示服务器地址和各自的角色
+
+假如要部署电商前端服务，执行如下命令
+ [cds@u01cds01 trade_deploy]$ cd dragonfishWeb/
+ [cds@u01cds01 dragonfishWeb]$ ll
+total 16
+-rw-rw-r-- 1 cds cds   95 Aug 29 16:08 Capfile
+drwxrwxr-x 3 cds cds 4096 Nov  1 20:51 config
+-rw-rw-r-- 1 cds cds   70 Aug 29 16:08 Gemfile
+-rw-rw-r-- 1 cds cds  468 Aug 29 16:08 Gemfile.lock
+-rw-rw-r-- 1 cds cds    0 Aug 29 16:08 README.md
+ [cds@u01cds01 dragonfishWeb]$ cap production deploy 
+
