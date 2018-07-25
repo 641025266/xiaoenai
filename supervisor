@@ -131,11 +131,10 @@ wakeManager: added process group
 [root@dev02 supervisor]# supervisorctl status
 redis                            RUNNING   pid 1753, uptime 0:01:53
 wakeManager                      RUNNING   pid 1857, uptime 0:00:11
-场景二：一个进程已经存在，但是现在被部署了一次，是可以直接重启进程，还是在部署前先停止进程在部署完成后启动进程
-supervisorctl update作用
-如果进程已经存在且在运行，但是进程配置被跟新了，先stop，然后start
-如果进程已经存在但处于停止状态，但是进程配置被跟新了，update只是添加新配置，不启动
-如果进程不存在，添加一个全新的配置文件，则直接start
+场景二：一个进程已经存在,但是现在被部署了一次,执行supervisorctl update即可，supervisorctl update有如下三个作用
+  1)如果进程已经存在且在运行，但是进程配置被跟新了，先stop，然后start
+  2)如果进程已经存在但处于停止状态，但是进程配置被跟新了，update只是添加新配置，不启动。实际这种情况比较少
+  3)如果进程不存在，添加一个全新的配置文件，则直接start
 场景三：supervisor对日志有备份功能，但是不能实现定时功能，把supervisorctl restart命令加入到logrotate配置文件中
 
 
